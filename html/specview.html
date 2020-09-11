@@ -99,7 +99,12 @@
 		295.031097 2.801403<br/>
 		</div>
 		<br/>
-		<textarea  id="peaks" rows="20" cols="50"></textarea>
+		<textarea  id="peaks" rows="3" cols="50"></textarea>
+		<br/>
+		<input type="file" id="myFile" name="filename">
+		<input type="button" value="Resolve" name="resolve">
+		<div id="files">
+		</div>
 	</td>
 </tr>
 
@@ -144,19 +149,25 @@
 
 <script type="text/javascript">
 
+var data={}
+
 $(document).ready(function () {
 	
 	$("input[name='create']").click(function() {
 	
 		$("#specview_div").show();
 		$("#showInput").show();
-		$("#specview_form_div").hide();
+		// $("#specview_form_div").hide();
 		
 		if(!createSpectrum()) {
 			$("#specview_div").hide();
 			$("#showInput").hide();
 			$("#specview_form_div").show();
 		}
+	});
+
+	$("input[name='resolve']").click(function() {
+		resolveFile();
 	});
 	
 	$("input[name='clear']").click(function() {
@@ -182,6 +193,49 @@ $(document).ready(function () {
 	})
 
 });
+
+function createLink()
+{
+	$("#files").empty();
+	for (var key in data) {
+		$("#files").append('<li><a href="javascript:void(0)" onclick="fillText(this)">'+key+"</a></li>");
+	}
+}
+
+function fillText(e)
+{
+	$("#peaks").val(data[e.innerText]);
+}
+
+function resolveFile()
+{
+	data = {}
+	var selectedFile = document.getElementById('myFile').files[0];
+	var reader = new FileReader();
+	reader.readAsText(selectedFile);
+	reader.onload = function () {
+		var result = this.result.split('\n');
+		//console.log(result);
+		var peaks = "", title="";
+		var begin = false;
+		for (var i = 0 ; i < result.length ; i++)
+		{
+			if (result[i].startsWith("TITLE="))	{
+				title = result[i];
+			} else if (result[i].startsWith("CHARGE=")) {
+				begin = true;
+			} else if (result[i].startsWith("END IONS")) {
+				begin = false;
+				data[title] = peaks;
+				peaks = "";
+				title = "";
+			} else if (begin) {
+				peaks += result[i] + '\n';
+			} 
+		}
+		createLink();
+	}
+}
 
 function addToStaticModList() {
 	var list = $("#staticmod_list");
