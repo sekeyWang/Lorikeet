@@ -57,16 +57,6 @@
 </tr>
 
 <tr>
-	<td><b>Add to N-term:</b> </td>
-	<td><input type="text" name="ntermMod"/></td>
-</tr>
-
-<tr>
-	<td><b>Add to C-term:</b> </td>
-	<td><input type="text" name="ctermMod"/></td>
-</tr>
-
-<tr>
 	<td colspan="2">
 		<b>Fixed Modifications:</b> <span class="link staticmod_add">[ADD]</span>
 		<br/>
@@ -78,9 +68,6 @@
 <tr>
 	<td colspan="2">
 		<b>Variable Modifications:</b> <span class="link varmod_add">[ADD]</span>
-		<br/>
-		<span class="font_small">Residue position in the sequence is 1-based. <br/>
-		Enter a comma-separated list of positions if multiple positions in the sequence have the same modification.</span>
 		<!-- <br>Enter the mass of the modification.)</span>-->
 		<ul id="varmod_list"></ul>
 	</td>
@@ -88,33 +75,19 @@
 
 <tr>
 	<td colspan="2">
-		<b>Spectrum Peaks:</b>
-		<br/>
-		<span class="font_small">
-		Enter one m/z, intensity pair on a single line. <br/>
-		Example:</span><br/>
-		<div class="font_small" style="padding:5px;">
-		283.751526 6.493506<br/>
-		287.601379 11.096813<br/>
-		295.031097 2.801403<br/>
-		</div>
-		<br/>
-		<textarea  id="peaks" rows="3" cols="50"></textarea>
-		<br/>
 		<input type="file" id="myFile" name="filename">
 		<input type="button" value="Resolve" name="resolve">
-		<div id="files">
-		</div>
 	</td>
 </tr>
 
-<tr>
+<tr id="scan" style="display:none">
+	<td><b>Scan Number:</b></td>
+	<td><input type="text" size="20" name="ScanNum"/></td>
 	<td><input type="button" name="create" value="Create Spectrum"/></td>
-	<td><input type="button" name="clear" value="Clear Data"/></td>
 </tr>
+
 </tbody>
 </table>
-<div style="margin:10px; width:100%;"><span class="link" id="example_data_link">Use Sample Data</span></div>
 </div>
 
 
@@ -156,13 +129,13 @@ $(document).ready(function () {
 	$("input[name='create']").click(function() {
 	
 		$("#specview_div").show();
-		$("#showInput").show();
+		// $("#showInput").show();
 		// $("#specview_form_div").hide();
 		
 		if(!createSpectrum()) {
 			$("#specview_div").hide();
-			$("#showInput").hide();
-			$("#specview_form_div").show();
+//			$("#showInput").hide();
+//			$("#specview_form_div").show();
 		}
 	});
 
@@ -198,13 +171,8 @@ function createLink()
 {
 	$("#files").empty();
 	for (var key in data) {
-		$("#files").append('<li><a href="javascript:void(0)" onclick="fillText(this)">'+key+"</a></li>");
+		$("#files").append('<li><a href="javascript:void(0)" onclick="createSpectrum(this)">'+key+"</a></li>");
 	}
-}
-
-function fillText(e)
-{
-	$("#peaks").val(data[e.innerText]);
 }
 
 function resolveFile()
@@ -216,24 +184,28 @@ function resolveFile()
 	reader.onload = function () {
 		var result = this.result.split('\n');
 		//console.log(result);
-		var peaks = "", title="";
+		var peaks = [], title="";
 		var begin = false;
 		for (var i = 0 ; i < result.length ; i++)
 		{
 			if (result[i].startsWith("TITLE="))	{
-				title = result[i];
+				scan = result[i].split("scan=")[1]
+				scan = scan.substr(0, scan.length - 1)
+				title = scan;
 			} else if (result[i].startsWith("CHARGE=")) {
 				begin = true;
 			} else if (result[i].startsWith("END IONS")) {
 				begin = false;
 				data[title] = peaks;
-				peaks = "";
+				peaks = [];
 				title = "";
 			} else if (begin) {
-				peaks += result[i] + '\n';
+				peakVals = result[i].split(' ');
+				peaks.push([parseFloat(peakVals[0]), parseFloat(peakVals[1])]);
 			} 
 		}
-		createLink();
+		alert("Successfully Loaded!");
+		$("#scan").show()
 	}
 }
 
@@ -288,8 +260,8 @@ function clearFields() {
 }
 
 
-function createSpectrum() {
-
+function createSpectrum(e) {
+	
 	// first remove the existing spectrum
 	$("#specview_plot_div").html("");
 	
@@ -437,6 +409,15 @@ function createSpectrum() {
 	// -----------------------------------------------------------
 	// Get the peaks:
 	// -----------------------------------------------------------
+	var ScanNum = $('input[name="ScanNum"]').val();
+	var peaks = []
+	if (data.hasOwnProperty(ScanNum)){
+		peaks = data[ScanNum]
+	}
+	else{
+		alert("No such scan number")
+	}
+	/*
 	var peaks  = [];
 	var peaksStr = $("#peaks").val();
 	var peaksArr = peaksStr.split("\n");
@@ -453,6 +434,7 @@ function createSpectrum() {
 		}
 		peaks.push([parseFloat(peakVals[0]), parseFloat(peakVals[1])]);
 	}
+	*/
 	
 	
 	// -----------------------------------------------------------
@@ -464,9 +446,10 @@ function createSpectrum() {
 								//fileName:'sh_1617_JX_070209p_KO410_run1',
 								staticMods: staticMods, 
 								variableMods: varMods, 
-								ntermMod: ntermMod, 
-								ctermMod: ctermMod,
-								peaks: peaks});	
+//								ntermMod: ntermMod, 
+//								ctermMod: ctermMod,
+								peaks: peaks
+							});	
 								
 	
 	return true;
