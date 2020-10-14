@@ -14,7 +14,7 @@
                 charge: null,
                 fragmentMassType: 'mono',
                 precursorMassType: 'mono',
-                peakDetect: true,
+                peakDetect: false,
                 calculatedMz: null,
                 precursorMz: null,
                 selWinLow: null,
@@ -40,15 +40,15 @@
                 zoomMs1: false,
                 width: 700, 	// width of the ms/ms plot
                 height: 450, 	// height of the ms/ms plot
-                massError: 0.5, // mass tolerance (in th) for labeling peaks
-                massErrorUnit: massErrorTypeTh, // 'Th' or 'ppm'
+                massError: 20, // mass tolerance (in th) for labeling peaks
+                massErrorUnit: massErrorTypePpm, // 'Th' or 'ppm'
                 extraPeakSeries:[],
                 showIonTable: true,
                 showViewingOptions: true,
                 showOptionsTable: true,
                 peakLabelOpt: 'mz',
                 showSequenceInfo: true,
-                labelImmoniumIons: true,
+                labelImmoniumIons: false,
                 labelPrecursorPeak: true,
                 labelReporters: false,
 				tooltipZIndex: null,
